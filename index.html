@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosplay Community</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+            border-bottom: 2px solid #333;
+        }
+
+        .header h1 {
+            color: #ff6b6b;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #888;
+            font-size: 16px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 30px;
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            color: #888;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-tab.active {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .card {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #333;
+        }
+
+        .card h3 {
+            color: #ff6b6b;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .news-item {
+            background: #333;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #ff6b6b;
+        }
+
+        .news-item h4 {
+            color: #fff;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .news-item p {
+            color: #ccc;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .news-meta {
+            color: #888;
+            font-size: 12px;
+        }
+
+        .cosplayer-item {
+            display: flex;
+            align-items: center;
+            background: #333;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .cosplayer-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #ff6b6b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 20px;
+            color: white;
+        }
+
+        .cosplayer-info {
+            flex: 1;
+        }
+
+        .cosplayer-name {
+            color: #fff;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .cosplayer-stats {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #ccc;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            background: #333;
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #ff6b6b;
+        }
+
+        .btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #ff5252;
+        }
+
+        .btn-secondary {
+            background: #555;
+        }
+
+        .btn-secondary:hover {
+            background: #666;
+        }
+
+        .event-item {
+            background: #333;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #4ecdc4;
+        }
+
+        .event-date {
+            color: #4ecdc4;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .shop-item {
+            background: #333;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #45b7d1;
+        }
+
+        .shop-category {
+            color: #45b7d1;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .loading {
+            text-align: center;
+            color: #888;
+            padding: 40px;
+        }
+
+        .error {
+            background: #ff4757;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .success {
+            background: #2ed573;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎭 Cosplay Community</h1>
+            <p>Ваш косплей мир в Telegram</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('news')">📰 Новости</button>
+            <button class="nav-tab" onclick="showTab('top')">📊 Топ</button>
+            <button class="nav-tab" onclick="showTab('register')">👤 Регистрация</button>
+            <button class="nav-tab" onclick="showTab('events')">🎪 Мероприятия</button>
+            <button class="nav-tab" onclick="showTab('shops')">🛍️ Магазины</button>
+        </div>
+
+        <!-- Новости -->
+        <div id="news" class="tab-content active">
+            <div class="card">
+                <h3>📰 Последние новости</h3>
+                <div id="news-list">
+                    <div class="loading">Загрузка новостей...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Топ косплееров -->
+        <div id="top" class="tab-content">
+            <div class="card">
+                <h3>📊 Топ косплееров</h3>
+                <div id="top-list">
+                    <div class="loading">Загрузка рейтинга...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Регистрация -->
+        <div id="register" class="tab-content">
+            <div class="card">
+                <h3>👤 Регистрация косплеера</h3>
+                <form id="registration-form">
+                    <div class="form-group">
+                        <label for="cosplay-name">Косплей имя:</label>
+                        <input type="text" id="cosplay-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Описание:</label>
+                        <textarea id="description" rows="3" placeholder="Расскажите о себе и своих косплеях..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="experience">Уровень опыта:</label>
+                        <select id="experience">
+                            <option value="Начинающий">Начинающий</option>
+                            <option value="Любитель">Любитель</option>
+                            <option value="Профессионал">Профессионал</option>
+                            <option value="Мастер">Мастер</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn">Зарегистрироваться</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Мероприятия -->
+        <div id="events" class="tab-content">
+            <div class="card">
+                <h3>🎪 Косплей мероприятия</h3>
+                <div id="events-list">
+                    <div class="loading">Загрузка мероприятий...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Магазины -->
+        <div id="shops" class="tab-content">
+            <div class="card">
+                <h3>🛍️ Аниме магазины</h3>
+                <div id="shops-list">
+                    <div class="loading">Загрузка магазинов...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
+
+        // Показ вкладок
+        function showTab(tabName) {
+            // Скрываем все вкладки
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Убираем активный класс у всех кнопок
+            const buttons = document.querySelectorAll('.nav-tab');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            // Показываем нужную вкладку
+            document.getElementById(tabName).classList.add('active');
+            
+            // Добавляем активный класс кнопке
+            event.target.classList.add('active');
+            
+            // Загружаем данные для вкладки
+            loadTabData(tabName);
+        }
+
+        // Загрузка данных для вкладки
+        function loadTabData(tabName) {
+            switch(tabName) {
+                case 'news':
+                    loadNews();
+                    break;
+                case 'top':
+                    loadTopCosplayers();
+                    break;
+                case 'events':
+                    loadEvents();
+                    break;
+                case 'shops':
+                    loadShops();
+                    break;
+            }
+        }
+
+        // Загрузка новостей
+        function loadNews() {
+            const newsList = document.getElementById('news-list');
+            // Здесь будет API запрос к вашему боту
+            newsList.innerHTML = `
+                <div class="news-item">
+                    <h4>🎭 Новый косплей фестиваль в Москве!</h4>
+                    <p>Уже в следующем месяце состоится грандиозный косплей фестиваль с участием звезд аниме индустрии.</p>
+                    <div class="news-meta">Автор: CosplayMaster • 2 часа назад</div>
+                </div>
+                <div class="news-item">
+                    <h4>🏆 Результаты конкурса косплееров</h4>
+                    <p>Подведены итоги всероссийского конкурса косплееров. Победители получат ценные призы.</p>
+                    <div class="news-meta">Автор: EventOrganizer • 1 день назад</div>
+                </div>
+            `;
+        }
+
+        // Загрузка топ косплееров
+        function loadTopCosplayers() {
+            const topList = document.getElementById('top-list');
+            topList.innerHTML = `
+                <div class="cosplayer-item">
+                    <div class="cosplayer-avatar">👑</div>
+                    <div class="cosplayer-info">
+                        <div class="cosplayer-name">CosplayQueen</div>
+                        <div class="cosplayer-stats">Мастер • 1250 очков • 15 достижений</div>
+                    </div>
+                </div>
+                <div class="cosplayer-item">
+                    <div class="cosplayer-avatar">🥈</div>
+                    <div class="cosplayer-info">
+                        <div class="cosplayer-name">AnimeLover</div>
+                        <div class="cosplayer-stats">Профессионал • 980 очков • 12 достижений</div>
+                    </div>
+                </div>
+                <div class="cosplayer-item">
+                    <div class="cosplayer-avatar">🥉</div>
+                    <div class="cosplayer-info">
+                        <div class="cosplayer-name">CosplayPro</div>
+                        <div class="cosplayer-stats">Профессионал • 850 очков • 10 достижений</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Загрузка мероприятий
+        function loadEvents() {
+            const eventsList = document.getElementById('events-list');
+            eventsList.innerHTML = `
+                <div class="event-item">
+                    <div class="event-date">15 декабря 2024</div>
+                    <h4>Зимний косплей фестиваль</h4>
+                    <p>Грандиозное мероприятие для всех любителей косплея в центре Москвы.</p>
+                    <div class="news-meta">📍 Москва, Центральный парк</div>
+                </div>
+                <div class="event-item">
+                    <div class="event-date">22 декабря 2024</div>
+                    <h4>Аниме конвент "Otaku Winter"</h4>
+                    <p>Трехдневный конвент с косплей конкурсами, мастер-классами и ярмаркой.</p>
+                    <div class="news-meta">📍 Санкт-Петербург, Экспофорум</div>
+                </div>
+            `;
+        }
+
+        // Загрузка магазинов
+        function loadShops() {
+            const shopsList = document.getElementById('shops-list');
+            shopsList.innerHTML = `
+                <div class="shop-item">
+                    <div class="shop-category">Костюмы</div>
+                    <h4>CosplayStore.ru</h4>
+                    <p>Магазин качественных косплей костюмов и аксессуаров.</p>
+                    <div class="news-meta">🌐 cosplaystore.ru</div>
+                </div>
+                <div class="shop-item">
+                    <div class="shop-category">Парики</div>
+                    <h4>WigMaster</h4>
+                    <p>Специализированный магазин париков для косплея.</p>
+                    <div class="news-meta">🌐 wigmaster.com</div>
+                </div>
+            `;
+        }
+
+        // Обработка регистрации
+        document.getElementById('registration-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const cosplayName = document.getElementById('cosplay-name').value;
+            const description = document.getElementById('description').value;
+            const experience = document.getElementById('experience').value;
+            
+            // Здесь будет отправка данных в бот
+            tg.sendData(JSON.stringify({
+                action: 'register_cosplayer',
+                cosplay_name: cosplayName,
+                description: description,
+                experience: experience
+            }));
+            
+            // Показываем сообщение об успехе
+            const form = document.getElementById('registration-form');
+            form.innerHTML = '<div class="success">✅ Регистрация успешно отправлена! Мы свяжемся с вами в ближайшее время.</div>';
+        });
+
+        // Загружаем данные для первой вкладки
+        loadTabData('news');
+    </script>
+</body>
+</html>
