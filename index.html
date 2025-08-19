@@ -439,6 +439,9 @@
                 case 'top':
                     loadTopCosplayers();
                     break;
+                case 'register':
+                    loadRegistration();
+                    break;
                 case 'events':
                     loadEvents();
                     break;
@@ -573,6 +576,48 @@
         }
 
         // Обработка регистрации
+        async function loadRegistration() {
+            const formEl = document.getElementById('registration-form');
+            const user = tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
+            if (!user) return;
+            try {
+                const res = await fetch(`/api/registration-status?telegram_id=${user.id}`);
+                const data = await res.json();
+                const status = data.ok ? (data.status || 'none') : 'none';
+                setRegistrationState(status);
+            } catch (e) {
+                // ignore
+            }
+        }
+
+        function setRegistrationState(status) {
+            const formWrap = document.getElementById('registration-form');
+            const parent = formWrap.parentElement;
+            const oldMsg = parent.querySelector('.reg-status-msg');
+            if (oldMsg) oldMsg.remove();
+            let msg = '';
+            if (status === 'pending') {
+                msg = '<div class="loading reg-status-msg">⌛ Ваша заявка отправлена и ожидает модерации. Возвращайтесь позже.</div>';
+                formWrap.style.display = 'none';
+            } else if (status === 'approved') {
+                msg = '<div class="success reg-status-msg">✅ Ваша заявка одобрена. Вы уже в топе косплееров.</div>';
+                formWrap.style.display = 'none';
+            } else if (status === 'rejected') {
+                msg = '<div class="error reg-status-msg">❌ Регистрация отклонена, пожалуйста переподайте свою заявку.</div>';
+                formWrap.style.display = '';
+            } else if (status === 'banned') {
+                msg = '<div class="error reg-status-msg">⛔ Вы заблокированы для регистрации, как косплеер из-за не соблюдения правил.</div>';
+                formWrap.style.display = 'none';
+            } else {
+                formWrap.style.display = '';
+            }
+            if (msg) {
+                const div = document.createElement('div');
+                div.innerHTML = msg;
+                parent.insertBefore(div.firstChild, formWrap);
+            }
+        }
+
         document.getElementById('registration-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -593,14 +638,19 @@
             };
 
             try {
-                await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const res = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const data = await res.json();
+                if (data && data.ok) {
+                    setRegistrationState(data.status || 'pending');
+                } else if (data && data.status === 'banned') {
+                    setRegistrationState('banned');
+                }
             } catch (err) {
                 console.error(err);
             }
             
-            // Показываем сообщение об успехе
-            const form = document.getElementById('registration-form');
-            form.innerHTML = '<div class="success">✅ Регистрация успешно отправлена! Мы свяжемся с вами в ближайшее время.</div>';
+            // Покажем ожидание модерации
+            setRegistrationState('pending');
         });
 
         // Загружаем данные для первой вкладки
