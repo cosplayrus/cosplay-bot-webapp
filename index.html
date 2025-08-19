@@ -390,6 +390,16 @@
         tg.expand();
         tg.ready();
 
+        // Функция валидации URL
+        function isValidUrl(string) {
+            try {
+                const url = new URL(string);
+                return url.protocol === 'http:' || url.protocol === 'https:';
+            } catch (_) {
+                return false;
+            }
+        }
+
         // Показ вкладок
         function showTab(event, tabName) {
             // Скрываем все вкладки
@@ -643,6 +653,28 @@
             
             if (cosplayName.length > 50) {
                 alert('Ник слишком длинный (максимум 50 символов)');
+                return;
+            }
+            
+            // Валидация длины других полей
+            if (description.length > 500) {
+                alert('Описание слишком длинное (максимум 500 символов)');
+                return;
+            }
+            
+            if (fandoms.length > 200) {
+                alert('Фандомы слишком длинные (максимум 200 символов)');
+                return;
+            }
+            
+            if (telegramChannel.length > 100) {
+                alert('Ссылка на канал слишком длинная (максимум 100 символов)');
+                return;
+            }
+            
+            // Валидация URL
+            if (telegramChannel && !isValidUrl(telegramChannel)) {
+                alert('Пожалуйста, введите корректную ссылку на телеграм канал');
                 return;
             }
             
