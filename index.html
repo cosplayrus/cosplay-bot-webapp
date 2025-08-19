@@ -483,51 +483,31 @@
 
             async function renderTop(q = '') {
                 itemsWrap.innerHTML = '<div class="loading">Загрузка рейтинга...</div>';
-                try {
-                    const viewerId = (tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) || -1;
-                    const res = await fetch(`/api/top?q=${encodeURIComponent(q)}&viewer_id=${viewerId}`);
-                    const data = await res.json();
-                    if (!data.ok) throw new Error('Ошибка загрузки');
-                    if (!data.items.length) {
-                        itemsWrap.innerHTML = '<div class="loading">Ничего не найдено</div>';
-                        return;
-                    }
-                    itemsWrap.innerHTML = data.items.map(item => `
-                        <div class="cosplayer-item" data-id="${item.id}">
-                            <div class="cosplayer-avatar">${item.avatar_url ? `<img src="${item.avatar_url}" alt="avatar" style="width:50px;height:50px;border-radius:50%">` : '🎭'}</div>
-                            <div class="cosplayer-info">
-                                <div class="cosplayer-name">${item.cosplay_name}</div>
-                                <div class="cosplayer-stats">${item.fandoms ? item.fandoms : ''}</div>
-                                ${item.telegram_channel ? `<a href="${item.telegram_channel}" target="_blank" style="color:#45b7d1">Канал</a>` : ''}
-                            </div>
-                            <button class="btn btn-secondary like-btn" data-liked="${item.liked_by_viewer ? '1' : '0'}" style="min-width:64px">
-                                ❤️ <span class="like-count">${item.likes_count}</span>
-                            </button>
+                
+                // Для GitHub Pages показываем заглушку
+                // В реальном приложении данные будут загружаться через tg.sendData
+                itemsWrap.innerHTML = `
+                    <div class="cosplayer-item">
+                        <div class="cosplayer-avatar">🎭</div>
+                        <div class="cosplayer-info">
+                            <div class="cosplayer-name">Пример косплеера</div>
+                            <div class="cosplayer-stats">Аниме, Манга</div>
                         </div>
-                    `).join('');
-
-                    // Обработчики лайков
-                    document.querySelectorAll('.like-btn').forEach(btn => {
-                        btn.addEventListener('click', async (e) => {
-                            const row = e.currentTarget.closest('.cosplayer-item');
-                            const id = Number(row.dataset.id);
-                            const voterId = (tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) || 0;
-                            if (!voterId) {
-                                alert('Нужно открыть через Telegram');
-                                return;
-                            }
-                            const res = await fetch('/api/like', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ cosplayer_id:id, voter_telegram_id:voterId }) });
-                            const payload = await res.json();
-                            if (payload.ok) {
-                                row.querySelector('.like-count').textContent = payload.likes_count;
-                                btn.dataset.liked = payload.liked ? '1' : '0';
-                                btn.style.background = payload.liked ? '#ff6b6b' : '#555';
-                            }
-                        });
-                    });
-                } catch (e) {
-                    itemsWrap.innerHTML = '<div class="error">Не удалось загрузить топ</div>';
-                }
+                        <button class="btn btn-secondary" style="min-width:64px">
+                            ❤️ <span class="like-count">5</span>
+                        </button>
+                    </div>
+                    <div class="cosplayer-item">
+                        <div class="cosplayer-avatar">🎭</div>
+                        <div class="cosplayer-info">
+                            <div class="cosplayer-name">Другой косплеер</div>
+                            <div class="cosplayer-stats">Игры, Фильмы</div>
+                        </div>
+                        <button class="btn btn-secondary" style="min-width:64px">
+                            ❤️ <span class="like-count">3</span>
+                        </button>
+                    </div>
+                `;
             }
 
             document.getElementById('top-search').addEventListener('input', (e) => {
@@ -580,14 +560,10 @@
             const formEl = document.getElementById('registration-form');
             const user = tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
             if (!user) return;
-            try {
-                const res = await fetch(`/api/registration-status?telegram_id=${user.id}`);
-                const data = await res.json();
-                const status = data.ok ? (data.status || 'none') : 'none';
-                setRegistrationState(status);
-            } catch (e) {
-                // ignore
-            }
+            
+            // Для GitHub Pages показываем форму по умолчанию
+            // Статус будет проверяться после отправки через tg.sendData
+            setRegistrationState('none');
         }
 
         function setRegistrationState(status) {
@@ -638,31 +614,22 @@
             };
 
             console.log('Sending registration payload:', payload);
-            try {
-                const res = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                console.log('Registration response status:', res.status);
-                if (!res.ok) throw new Error('register failed');
-                const data = await res.json();
-                console.log('Registration response data:', data);
-                if (data && data.ok) {
-                    setRegistrationState(data.status || 'pending');
-                } else if (data && data.status === 'banned') {
-                    setRegistrationState('banned');
-                }
-            } catch (err) {
-                console.error('fetch /api/register failed, fallback to tg.sendData', err);
-                if (tg && tg.sendData) {
-                    console.log('Using tg.sendData fallback');
-                    tg.sendData(JSON.stringify({
-                        action: 'register_cosplayer',
-                        cosplay_name: payload.cosplay_name,
-                        description: payload.description,
-                        fandoms: payload.fandoms,
-                        telegram_channel: payload.telegram_channel,
-                        avatar_url: payload.avatar_url
-                    }));
-                    setRegistrationState('pending');
-                }
+            
+            // Используем tg.sendData для отправки данных боту
+            if (tg && tg.sendData) {
+                console.log('Using tg.sendData to send registration data');
+                tg.sendData(JSON.stringify({
+                    action: 'register_cosplayer',
+                    cosplay_name: payload.cosplay_name,
+                    description: payload.description,
+                    fandoms: payload.fandoms,
+                    telegram_channel: payload.telegram_channel,
+                    avatar_url: payload.avatar_url
+                }));
+                setRegistrationState('pending');
+            } else {
+                console.error('tg.sendData not available');
+                alert('Ошибка: не удалось отправить данные. Попробуйте еще раз.');
             }
             
             // Покажем ожидание модерации
