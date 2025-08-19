@@ -639,6 +639,7 @@
 
             try {
                 const res = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!res.ok) throw new Error('register failed');
                 const data = await res.json();
                 if (data && data.ok) {
                     setRegistrationState(data.status || 'pending');
@@ -646,7 +647,18 @@
                     setRegistrationState('banned');
                 }
             } catch (err) {
-                console.error(err);
+                console.error('fetch /api/register failed, fallback to tg.sendData', err);
+                if (tg && tg.sendData) {
+                    tg.sendData(JSON.stringify({
+                        action: 'register_cosplayer',
+                        cosplay_name: payload.cosplay_name,
+                        description: payload.description,
+                        fandoms: payload.fandoms,
+                        telegram_channel: payload.telegram_channel,
+                        avatar_url: payload.avatar_url
+                    }));
+                    setRegistrationState('pending');
+                }
             }
             
             // Покажем ожидание модерации
