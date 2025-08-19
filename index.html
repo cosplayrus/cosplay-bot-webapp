@@ -357,8 +357,13 @@
                         <label for="telegram-channel">Ваш телеграм канал:</label>
                         <input type="url" id="telegram-channel" placeholder="Укажите полную ссылку на ваш тгк канал...">
                     </div>
-                    <button type="submit" class="btn">Зарегистрироваться</button>
-                </form>
+                                         <button type="submit" class="btn">Зарегистрироваться</button>
+                 </form>
+                 
+                 <!-- Тестовая кнопка для отладки -->
+                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #333;">
+                     <button type="button" class="btn btn-secondary" onclick="testSendData()">🧪 Тест отправки данных</button>
+                 </div>
             </div>
         </div>
 
@@ -481,34 +486,60 @@
 
             const itemsWrap = document.getElementById('top-items');
 
-            async function renderTop(q = '') {
-                itemsWrap.innerHTML = '<div class="loading">Загрузка рейтинга...</div>';
-                
-                // Для GitHub Pages показываем заглушку
-                // В реальном приложении данные будут загружаться через tg.sendData
-                itemsWrap.innerHTML = `
-                    <div class="cosplayer-item">
-                        <div class="cosplayer-avatar">🎭</div>
-                        <div class="cosplayer-info">
-                            <div class="cosplayer-name">Пример косплеера</div>
-                            <div class="cosplayer-stats">Аниме, Манга</div>
-                        </div>
-                        <button class="btn btn-secondary" style="min-width:64px">
-                            ❤️ <span class="like-count">5</span>
-                        </button>
-                    </div>
-                    <div class="cosplayer-item">
-                        <div class="cosplayer-avatar">🎭</div>
-                        <div class="cosplayer-info">
-                            <div class="cosplayer-name">Другой косплеер</div>
-                            <div class="cosplayer-stats">Игры, Фильмы</div>
-                        </div>
-                        <button class="btn btn-secondary" style="min-width:64px">
-                            ❤️ <span class="like-count">3</span>
-                        </button>
-                    </div>
-                `;
-            }
+                         async function renderTop(q = '') {
+                 itemsWrap.innerHTML = '<div class="loading">Загрузка рейтинга...</div>';
+                 
+                 // Запрашиваем данные через tg.sendData
+                 if (tg && tg.sendData) {
+                     try {
+                         tg.sendData(JSON.stringify({
+                             action: 'get_top_cosplayers',
+                             query: q
+                         }));
+                         
+                         // Показываем заглушку пока данные загружаются
+                         itemsWrap.innerHTML = `
+                             <div class="cosplayer-item">
+                                 <div class="cosplayer-avatar">🎭</div>
+                                 <div class="cosplayer-info">
+                                     <div class="cosplayer-name">Загрузка данных...</div>
+                                     <div class="cosplayer-stats">Пожалуйста, подождите</div>
+                                 </div>
+                                 <button class="btn btn-secondary" style="min-width:64px">
+                                     ❤️ <span class="like-count">-</span>
+                                 </button>
+                             </div>
+                         `;
+                     } catch (error) {
+                         console.error('Error requesting top cosplayers:', error);
+                         itemsWrap.innerHTML = '<div class="error">Ошибка загрузки данных</div>';
+                     }
+                 } else {
+                     // Fallback заглушка
+                     itemsWrap.innerHTML = `
+                         <div class="cosplayer-item">
+                             <div class="cosplayer-avatar">🎭</div>
+                             <div class="cosplayer-info">
+                                 <div class="cosplayer-name">Пример косплеера</div>
+                                 <div class="cosplayer-stats">Аниме, Манга</div>
+                             </div>
+                             <button class="btn btn-secondary" style="min-width:64px">
+                                 ❤️ <span class="like-count">5</span>
+                             </button>
+                         </div>
+                         <div class="cosplayer-item">
+                             <div class="cosplayer-avatar">🎭</div>
+                             <div class="cosplayer-info">
+                                 <div class="cosplayer-name">Другой косплеер</div>
+                                 <div class="cosplayer-stats">Игры, Фильмы</div>
+                             </div>
+                             <button class="btn btn-secondary" style="min-width:64px">
+                                 ❤️ <span class="like-count">3</span>
+                             </button>
+                         </div>
+                     `;
+                 }
+             }
 
             document.getElementById('top-search').addEventListener('input', (e) => {
                 renderTop(e.target.value.trim());
@@ -597,47 +628,99 @@
         document.getElementById('registration-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const cosplayName = document.getElementById('cosplay-name').value;
-            const description = document.getElementById('description').value;
-            const fandoms = document.getElementById('fandoms').value;
-            const telegramChannel = document.getElementById('telegram-channel').value;
+            const cosplayName = document.getElementById('cosplay-name').value.trim();
+            const description = document.getElementById('description').value.trim();
+            const fandoms = document.getElementById('fandoms').value.trim();
+            const telegramChannel = document.getElementById('telegram-channel').value.trim();
+            
+            // Валидация данных
+            if (!cosplayName) {
+                alert('Пожалуйста, введите ваш ник');
+                return;
+            }
+            
+            if (cosplayName.length < 2) {
+                alert('Ник должен содержать минимум 2 символа');
+                return;
+            }
+            
+            if (cosplayName.length > 50) {
+                alert('Ник слишком длинный (максимум 50 символов)');
+                return;
+            }
             
             const user = tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
+            console.log('User data:', user);
+            
+            if (!user) {
+                console.error('No user data available');
+                alert('Ошибка: данные пользователя недоступны. Откройте приложение через Telegram.');
+                return;
+            }
+            
+            // Проверяем, что мы действительно в Telegram
+            if (!tg.initData) {
+                alert('Ошибка: приложение должно быть открыто через Telegram');
+                return;
+            }
+            
             const payload = {
-                telegram_id: user ? user.id : 0,
-                username: user ? (user.username || '') : '',
+                action: 'register_cosplayer',
                 cosplay_name: cosplayName,
                 description: description,
                 fandoms: fandoms,
                 telegram_channel: telegramChannel,
-                avatar_url: user && user.photo_url ? user.photo_url : ''
+                avatar_url: user && user.photo_url ? user.photo_url : '',
+                timestamp: Date.now() // Добавляем timestamp для дополнительной безопасности
             };
 
             console.log('Sending registration payload:', payload);
             
-            // Используем tg.sendData для отправки данных боту
+            // Используем tg.sendData - самый безопасный способ
             if (tg && tg.sendData) {
                 console.log('Using tg.sendData to send registration data');
-                tg.sendData(JSON.stringify({
-                    action: 'register_cosplayer',
-                    cosplay_name: payload.cosplay_name,
-                    description: payload.description,
-                    fandoms: payload.fandoms,
-                    telegram_channel: payload.telegram_channel,
-                    avatar_url: payload.avatar_url
-                }));
-                setRegistrationState('pending');
+                try {
+                    tg.sendData(JSON.stringify(payload));
+                    setRegistrationState('pending');
+                    console.log('Registration data sent successfully');
+                } catch (error) {
+                    console.error('Error sending data:', error);
+                    alert('Ошибка при отправке данных. Попробуйте еще раз.');
+                }
             } else {
                 console.error('tg.sendData not available');
-                alert('Ошибка: не удалось отправить данные. Попробуйте еще раз.');
+                alert('Ошибка: не удалось отправить данные. Откройте приложение через Telegram.');
             }
-            
-            // Покажем ожидание модерации
-            setRegistrationState('pending');
         });
 
-        // Загружаем данные для первой вкладки
-        loadTabData('news');
-    </script>
+                 // Тестовая функция для проверки tg.sendData
+         function testSendData() {
+             console.log('Testing tg.sendData...');
+             console.log('tg object:', tg);
+             console.log('tg.sendData available:', !!tg.sendData);
+             console.log('tg.initData available:', !!tg.initData);
+             console.log('tg.initDataUnsafe.user:', tg.initDataUnsafe?.user);
+             
+             if (tg && tg.sendData) {
+                 console.log('Sending test data...');
+                 try {
+                     tg.sendData(JSON.stringify({
+                         action: 'test',
+                         message: 'This is a test message from GitHub Pages',
+                         timestamp: Date.now()
+                     }));
+                     alert('Тестовые данные отправлены! Проверьте сообщения от бота.');
+                 } catch (error) {
+                     console.error('Error sending test data:', error);
+                     alert('Ошибка при отправке тестовых данных: ' + error.message);
+                 }
+             } else {
+                 alert('tg.sendData недоступен! Проверьте, что приложение открыто через Telegram.');
+             }
+         }
+         
+         // Загружаем данные для первой вкладки
+         loadTabData('news');
+     </script>
 </body>
 </html>
