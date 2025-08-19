@@ -43,16 +43,54 @@
             font-size: 16px;
         }
 
-        .nav-tabs {
+        .nav-container {
             display: flex;
-            background: #2a2a2a;
-            border-radius: 12px;
-            padding: 4px;
+            align-items: center;
+            gap: 8px;
             margin-bottom: 30px;
         }
 
-        .nav-tab {
+        .scroll-btn {
+            background: #2a2a2a;
+            color: #ffffff;
+            border: 1px solid #333;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scroll-btn:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        .nav-scroll {
             flex: 1;
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 4px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE 10+ */
+        }
+
+        .nav-scroll::-webkit-scrollbar { /* Chrome/Safari */
+            display: none;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 4px;
+            width: max-content;
+        }
+
+        .nav-tab {
+            flex: 0 0 auto;
             padding: 12px;
             text-align: center;
             background: transparent;
@@ -264,12 +302,18 @@
             <p>Ваш косплей мир в Telegram</p>
         </div>
 
-        <div class="nav-tabs">
-            <button class="nav-tab active" onclick="showTab('news')">📰 Новости</button>
-            <button class="nav-tab" onclick="showTab('top')">📊 Топ</button>
-            <button class="nav-tab" onclick="showTab('register')">👤 Регистрация</button>
-            <button class="nav-tab" onclick="showTab('events')">🎪 Мероприятия</button>
-            <button class="nav-tab" onclick="showTab('shops')">🛍️ Магазины</button>
+        <div class="nav-container">
+            <button class="scroll-btn" id="nav-left" aria-label="Влево">◀</button>
+            <div class="nav-scroll" id="nav-scroll">
+                <div class="nav-tabs">
+                    <button class="nav-tab active" onclick="showTab(event,'news')">📰 Новости</button>
+                    <button class="nav-tab" onclick="showTab(event,'top')">📊 Топ</button>
+                    <button class="nav-tab" onclick="showTab(event,'register')">👤 Регистрация</button>
+                    <button class="nav-tab" onclick="showTab(event,'events')">🎪 Мероприятия</button>
+                    <button class="nav-tab" onclick="showTab(event,'shops')">🛍️ Магазины</button>
+                </div>
+            </div>
+            <button class="scroll-btn" id="nav-right" aria-label="Вправо">▶</button>
         </div>
 
         <!-- Новости -->
@@ -346,7 +390,7 @@
         tg.ready();
 
         // Показ вкладок
-        function showTab(tabName) {
+        function showTab(event, tabName) {
             // Скрываем все вкладки
             const tabs = document.querySelectorAll('.tab-content');
             tabs.forEach(tab => tab.classList.remove('active'));
@@ -364,6 +408,28 @@
             // Загружаем данные для вкладки
             loadTabData(tabName);
         }
+
+        // Прокрутка табов
+        const navScroll = document.getElementById('nav-scroll');
+        const btnLeft = document.getElementById('nav-left');
+        const btnRight = document.getElementById('nav-right');
+
+        function updateScrollButtons() {
+            const maxScrollLeft = navScroll.scrollWidth - navScroll.clientWidth;
+            btnLeft.disabled = navScroll.scrollLeft <= 0;
+            btnRight.disabled = navScroll.scrollLeft >= maxScrollLeft - 1;
+        }
+
+        function smoothScrollBy(amount) {
+            navScroll.scrollBy({ left: amount, behavior: 'smooth' });
+        }
+
+        btnLeft.addEventListener('click', () => smoothScrollBy(-140));
+        btnRight.addEventListener('click', () => smoothScrollBy(140));
+        navScroll.addEventListener('scroll', updateScrollButtons);
+        window.addEventListener('resize', updateScrollButtons);
+        // Первичная инициализация состояния кнопок
+        updateScrollButtons();
 
         // Загрузка данных для вкладки
         function loadTabData(tabName) {
