@@ -627,6 +627,14 @@
             const telegramChannel = document.getElementById('telegram-channel').value;
             
             const user = tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
+            console.log('User data:', user);
+            
+            if (!user) {
+                console.error('No user data available');
+                alert('Ошибка: данные пользователя недоступны. Откройте приложение через Telegram.');
+                return;
+            }
+            
             const payload = {
                 telegram_id: user ? user.id : 0,
                 username: user ? (user.username || '') : '',
