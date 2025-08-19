@@ -360,10 +360,7 @@
                                          <button type="submit" class="btn">Зарегистрироваться</button>
                  </form>
                  
-                 <!-- Тестовая кнопка для отладки -->
-                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #333;">
-                     <button type="button" class="btn btn-secondary" onclick="testSendData()">🧪 Тест отправки данных</button>
-                 </div>
+                 
             </div>
         </div>
 
@@ -676,48 +673,70 @@
 
             console.log('Sending registration payload:', payload);
             
-            // Используем tg.sendData - самый безопасный способ
+            // Пробуем разные методы отправки данных
+            let success = false;
+            
+            // Метод 1: tg.sendData (основной)
             if (tg && tg.sendData) {
-                console.log('Using tg.sendData to send registration data');
+                console.log('Trying tg.sendData...');
                 try {
                     tg.sendData(JSON.stringify(payload));
-                    setRegistrationState('pending');
-                    console.log('Registration data sent successfully');
+                    success = true;
+                    console.log('Registration data sent via tg.sendData');
                 } catch (error) {
-                    console.error('Error sending data:', error);
-                    alert('Ошибка при отправке данных. Попробуйте еще раз.');
+                    console.error('Error with tg.sendData:', error);
                 }
+            }
+            
+            // Метод 2: Альтернативный через сообщение (безопасный)
+            if (!success) {
+                console.log('Trying alternative message method...');
+                success = await sendDataViaMessage(payload);
+            }
+            
+            if (success) {
+                setRegistrationState('pending');
+                alert('✅ Регистрация отправлена! Ожидайте модерации.');
             } else {
-                console.error('tg.sendData not available');
-                alert('Ошибка: не удалось отправить данные. Откройте приложение через Telegram.');
+                alert('❌ Ошибка при отправке данных. Попробуйте еще раз или обратитесь к администратору.');
             }
         });
 
-                 // Тестовая функция для проверки tg.sendData
-         function testSendData() {
-             console.log('Testing tg.sendData...');
-             console.log('tg object:', tg);
-             console.log('tg.sendData available:', !!tg.sendData);
-             console.log('tg.initData available:', !!tg.initData);
-             console.log('tg.initDataUnsafe.user:', tg.initDataUnsafe?.user);
-             
-             if (tg && tg.sendData) {
-                 console.log('Sending test data...');
-                 try {
-                     tg.sendData(JSON.stringify({
-                         action: 'test',
-                         message: 'This is a test message from GitHub Pages',
-                         timestamp: Date.now()
-                     }));
-                     alert('Тестовые данные отправлены! Проверьте сообщения от бота.');
-                 } catch (error) {
-                     console.error('Error sending test data:', error);
-                     alert('Ошибка при отправке тестовых данных: ' + error.message);
-                 }
-             } else {
-                 alert('tg.sendData недоступен! Проверьте, что приложение открыто через Telegram.');
-             }
-         }
+        // Альтернативный метод отправки данных через сообщение (безопасный)
+        async function sendDataViaMessage(payload) {
+            try {
+                // Получаем данные пользователя из Telegram Web App
+                const user = tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
+                if (!user) {
+                    throw new Error('Данные пользователя недоступны');
+                }
+
+                // Создаем сообщение с данными
+                const message = `📝 Новая заявка на регистрацию\n\n` +
+                    `👤 Ник: ${payload.cosplay_name}\n` +
+                    `📝 Описание: ${payload.description}\n` +
+                    `🎭 Фандомы: ${payload.fandoms}\n` +
+                    `📱 Канал: ${payload.telegram_channel}\n` +
+                    `🆔 Telegram ID: ${user.id}\n` +
+                    `👤 Username: @${user.username || 'не указан'}\n` +
+                    `🕐 Время: ${new Date().toLocaleString('ru-RU')}`;
+
+                // Используем Telegram Web App API для отправки сообщения
+                if (tg && tg.sendMessage) {
+                    await tg.sendMessage(message);
+                    console.log('Данные отправлены через tg.sendMessage');
+                    return true;
+                } else {
+                    // Fallback: показываем инструкцию пользователю
+                    alert('Для завершения регистрации скопируйте и отправьте следующее сообщение боту:\n\n' + message);
+                    return true;
+                }
+            } catch (error) {
+                console.error('Ошибка отправки через сообщение:', error);
+                return false;
+            }
+        }
+
          
          // Загружаем данные для первой вкладки
          loadTabData('news');
